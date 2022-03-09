@@ -31,7 +31,8 @@ import {
   RAYDIUM_SRM_USDC_MARKET,
   ORCA_FTT_USDC_MARKET,
   RAYDIUM_whETH_USDC_MARKET,
-  RAYDIUM_stSOL_USDC_MARKET
+  RAYDIUM_stSOL_USDC_MARKET,
+  ORCA_scnSOL_USDC_MARKET
 } from '@apricot-lend/solana-swaps-js';
 import * as swappers from '@apricot-lend/solana-swaps-js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
@@ -54,6 +55,7 @@ export const SUPPORTED_MARKETS: {[key in TokenID]?: Swapper} = {
   [TokenID.FTT]: ORCA_FTT_USDC_MARKET,
   [TokenID.whETH]: RAYDIUM_whETH_USDC_MARKET,
   [TokenID.stSOL]: RAYDIUM_stSOL_USDC_MARKET,
+  [TokenID.scnSOL]: ORCA_scnSOL_USDC_MARKET,
 };
 
 export const TOK_ID_TRANSLATE = {
@@ -71,6 +73,7 @@ export const TOK_ID_TRANSLATE = {
   [TokenID.FTT]: swappers.TokenID.FTT,
   [TokenID.whETH]: swappers.TokenID.whETH,
   [TokenID.stSOL]: swappers.TokenID.stSOL,
+  [TokenID.scnSOL]: swappers.TokenID.scnSOL,
 }
 
 const [, , alphaStr, keyLocation, pageStart, pageEnd, endpoint] = process.argv;
@@ -214,7 +217,6 @@ export class LiquidatorBot {
       this.logUpdate(`Token account for ${tokenId} exists`);
     }
     else {
-      this.logUpdate(`Token account for ${tokenId} being created...`);
       // create it and init
       const createIx = Token.createAssociatedTokenAccountInstruction(
         ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -226,12 +228,13 @@ export class LiquidatorBot {
       );
       const tx = new Transaction().add(createIx);
       const sig = await this.connection.sendTransaction(tx, [this.keypair]);
-      this.connection.confirmTransaction(sig);
+      this.logUpdate(`Token account for ${tokenId} being created with tx: ${sig}`);
+      await this.connection.confirmTransaction(sig);
     }
   }
 
   async prepare() {
-    for(const tokId of [TokenID.BTC, TokenID.ETH, TokenID.SOL, TokenID.mSOL, TokenID.RAY, TokenID.ORCA, TokenID.USDC, TokenID.USDT, TokenID.UST, TokenID.USTv2, TokenID.APT, TokenID.SRM, TokenID.FTT, TokenID.whETH, TokenID.stSOL]) {
+    for(const tokId of [TokenID.BTC, TokenID.ETH, TokenID.SOL, TokenID.mSOL, TokenID.RAY, TokenID.ORCA, TokenID.USDC, TokenID.USDT, TokenID.UST, TokenID.USTv2, TokenID.APT, TokenID.SRM, TokenID.FTT, TokenID.whETH, TokenID.stSOL, TokenID.scnSOL]) {
       await this.checkOrCreateAssociatedTokAcc(tokId);
     }
   }
